@@ -8,6 +8,20 @@ HLT = '00000001'
 LDI = '10000010'
 PRN = '01000111'
 
+ADD = '10100000'
+SUB = '10100001'
+MUL = '10100010'
+DIV = '10100011'
+MOD = '10100100'
+
+alu = {
+       '10100000': 'ADD',
+       '10100001': 'SUB',
+       '10100010': 'MUL',
+       '10100011': 'DIV',
+       '10100100': 'MOD'
+       }
+
 class CPU:
     """Main CPU class."""
 
@@ -31,28 +45,13 @@ class CPU:
         self.ram[mar] = mdr
         self.mdr = self.ram[mar]
 
-    def load(self):
+    def load(self, filename):
         """Load a program into memory."""
 
         address = 0
+        print(filename)
 
-        # For now, we've just hardcoded a program:
-
-        # program = [
-        #     # From print8.ls8
-        #     0b10000010, # LDI R0,8
-        #     0b00000000,
-        #     0b00001000,
-        #     0b01000111, # PRN R0
-        #     0b00000000,
-        #     0b00000001, # HLT
-        # ]
-        #
-        # for instruction in program:
-        #     self.ram[address] = instruction
-        #     address += 1
-
-        lines = open('./examples/print8.ls8', 'r').read().splitlines()
+        lines = open(filename, 'r').read().splitlines()
         pattern = re.compile(r'[\d]{8}')
         instructions = []
         address = 0
@@ -64,10 +63,19 @@ class CPU:
 
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
-
+        # print(f'Reg A: {reg_a}[{self.reg[reg_a]}]')
+        # print(f'Reg A: {reg_b}[{self.reg[reg_b]}]')
         if op == "ADD":
-            self.reg[reg_a] += self.reg[reg_b]
-        # elif op == "SUB": etc
+            self.reg[reg_a] = format(int(self.reg[reg_a], 2) + int(self.reg[reg_b], 2), '08b')
+        elif op == "SUB":
+            self.reg[reg_a] = format(int(self.reg[reg_a], 2) - int(self.reg[reg_b], 2), '08b')
+        elif op == 'MUL':
+            self.reg[reg_a] = format(int(self.reg[reg_a], 2) * int(self.reg[reg_b], 2), '08b')
+        elif op == 'DIV':
+            self.reg[reg_a] = format(int(self.reg[reg_a], 2) / int(self.reg[reg_b], 2), '08b')
+        elif op == 'MOD':
+            self.reg[reg_a] = format(int(self.reg[reg_a], 2) % int(self.reg[reg_b], 2), '08b')
+
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -93,9 +101,10 @@ class CPU:
 
     def run(self):
         """Run the CPU."""
-        self.load()
         ir = self.pc
-        while ir < len(self.ram):
+        counter = 0
+        while ir < len(self.ram) and counter < 20:
+            counter += 1
             instruction = self.ram_read(ir)
             operand_a = self.ram_read(ir + 1)
             operand_b = self.ram_read(ir + 2)
@@ -111,4 +120,6 @@ class CPU:
                 value = int(self.reg[index], 2)
                 print(value)
                 ir += 2
-                # do stuff
+            elif instruction in alu:
+                self.alu(alu[instruction], int(operand_a, 2), int(operand_b, 2))
+                ir += 3
