@@ -1,13 +1,31 @@
 """CPU functionality."""
 
 import sys
+import re
+
 
 class CPU:
     """Main CPU class."""
 
     def __init__(self):
         """Construct a new CPU."""
-        pass
+        self.ram = [0] * 256
+        self.reg = [0] * 8
+        self.pc = 0
+        self.mar = 3  # initialize to R4, I think
+        self.mdr = self.reg[3]  # initialize to the value R4 holds, I think
+
+    def ram_read(self, mar):
+        if 0 > mar or mar > len(self.ram): return None
+        self.mar = mar
+        self.mdr = self.ram[mar]
+        return self.mdr
+
+    def ram_write(self, mdr, mar):
+        if 0 > mar or mar > len(self.ram): return None
+        self.mar = mar
+        self.ram[mar] = mdr
+        self.mdr = self.ram[mar]
 
     def load(self):
         """Load a program into memory."""
@@ -30,13 +48,12 @@ class CPU:
             self.ram[address] = instruction
             address += 1
 
-
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
 
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
-        #elif op == "SUB": etc
+        # elif op == "SUB": etc
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -48,8 +65,8 @@ class CPU:
 
         print(f"TRACE: %02X | %02X %02X %02X |" % (
             self.pc,
-            #self.fl,
-            #self.ie,
+            # self.fl,
+            # self.ie,
             self.ram_read(self.pc),
             self.ram_read(self.pc + 1),
             self.ram_read(self.pc + 2)
@@ -62,4 +79,15 @@ class CPU:
 
     def run(self):
         """Run the CPU."""
-        pass
+        lines = open('./examples/print8.ls8', 'r').read().splitlines()
+        pattern = re.compile(r'[\d]{8}')
+        instructions =[]
+        for line in lines:
+            match = pattern.match(line)
+            if match: instructions.append(match.group())
+        print(instructions)
+        address = 0
+        for i in instructions:
+            self.ram[address] = i
+            address += 1
+        ir = self.pc
