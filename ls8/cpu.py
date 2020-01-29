@@ -8,11 +8,14 @@ HLT = '00000001'
 LDI = '10000010'
 PRN = '01000111'
 
-ADD = '10100000'
-SUB = '10100001'
-MUL = '10100010'
-DIV = '10100011'
-MOD = '10100100'
+PUSH = '01000101'
+POP = '01000110'
+
+# ADD = '10100000'
+# SUB = '10100001'
+# MUL = '10100010'
+# DIV = '10100011'
+# MOD = '10100100'
 
 alu = {
        '10100000': 'ADD',
@@ -30,6 +33,7 @@ class CPU:
         self.ram = [0] * 256
         self.reg = [0] * 8
         self.pc = 0
+        self.sp = 7
         self.mar = 3  # initialize to R4, I think
         self.mdr = self.reg[3]  # initialize to the value R4 holds, I think
 
@@ -116,10 +120,23 @@ class CPU:
                 self.reg[index] = operand_b
                 ir += 3
             elif instruction == PRN:
-                index = int(operand_a)
+                index = int(operand_a, 2)
                 value = int(self.reg[index], 2)
                 print(value)
                 ir += 2
             elif instruction in alu:
                 self.alu(alu[instruction], int(operand_a, 2), int(operand_b, 2))
                 ir += 3
+            elif instruction == PUSH:
+                index = int(operand_a, 2)
+                val = self.reg[index]
+                self.reg[self.sp] -= 1
+                self.ram[self.reg[self.sp]] = val
+                ir += 2
+            elif instruction == POP:
+                index = int(operand_a, 2)
+                val = self.ram[self.reg[self.sp]]
+                self.reg[index] = val
+                self.reg[self.sp] += 1
+                ir += 2
+
