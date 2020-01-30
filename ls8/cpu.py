@@ -11,6 +11,9 @@ PRN = '01000111'
 PUSH = '01000101'
 POP = '01000110'
 
+CALL = '01010000'
+RET = '00010001'
+
 # ADD = '10100000'
 # SUB = '10100001'
 # MUL = '10100010'
@@ -107,7 +110,7 @@ class CPU:
         """Run the CPU."""
         ir = self.pc
         counter = 0
-        while ir < len(self.ram) and counter < 20:
+        while ir < len(self.ram) and counter < 100:
             counter += 1
             instruction = self.ram_read(ir)
             operand_a = self.ram_read(ir + 1)
@@ -139,4 +142,16 @@ class CPU:
                 self.reg[index] = val
                 self.reg[self.sp] += 1
                 ir += 2
+            elif instruction == CALL:
+                index = int(operand_a, 2)
+                val = self.reg[index]
+                self.reg[self.sp] -= 1
+                self.ram[self.reg[self.sp]] = ir
+                ir = int(val, 2)
+
+            elif instruction == RET:
+                val = self.ram[self.reg[self.sp]]
+                self.reg[self.sp] += 1
+                ir = val + 2
+
 
