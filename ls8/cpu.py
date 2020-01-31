@@ -14,6 +14,11 @@ POP = '01000110'
 CALL = '01010000'
 RET = '00010001'
 
+CMP = '10100111' # 2 params
+JMP = '01010100' # 1st param register
+JEQ = '01010101' # 1st param register
+JNE = '01010110' # 1st param register
+
 # ADD = '10100000'
 # SUB = '10100001'
 # MUL = '10100010'
@@ -153,5 +158,40 @@ class CPU:
                 val = self.ram[self.reg[self.sp]]
                 self.reg[self.sp] += 1
                 ir = val + 2
+
+            elif instruction == CMP:
+                index1 = int(operand_a, 2)
+                index2 = int(operand_b, 2)
+                val1 = int(self.reg[index1], 2)
+                val2 = int(self.reg[index2], 2)
+                val = None
+                if val1 == val2: val = '00000100'
+                else: val = '00000000'
+                self.reg[self.sp] -= 1
+                self.ram[self.reg[self.sp]] = val
+                ir += 3
+            elif instruction == JMP:
+                index = int(operand_a, 2)
+                val = self.reg[index]
+                ir = int(val, 2)
+            elif instruction == JEQ:
+                flag = self.ram[self.reg[self.sp]]
+                self.reg[self.sp] += 1
+                if flag == '00000100':
+                    index = int(self.reg[2], 2)
+                    ir = index
+                else:
+                    ir += 2
+            elif instruction == JNE:
+                flag = self.ram[self.reg[self.sp]]
+                self.reg[self.sp] += 1
+                if flag == '00000000':
+                    index = int(self.reg[2], 2)
+                    ir = index
+                else:
+                    ir += 2
+
+
+
 
 
